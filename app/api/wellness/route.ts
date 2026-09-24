@@ -12,6 +12,7 @@ type ProgressPatch = {
   steps?: unknown;
   water?: unknown;
   routineCompleted?: unknown;
+  workoutProgress?: unknown;
 };
 
 function validDate(value: unknown): value is string {
@@ -38,6 +39,7 @@ function serializeProgress(doc: Record<string, unknown> | undefined, date: strin
     steps: typeof doc.steps === "number" ? doc.steps : 0,
     water: typeof doc.water === "number" ? doc.water : 0,
     routineCompleted: Array.isArray(doc.routineCompleted) ? doc.routineCompleted.map(Boolean) : [],
+    workoutProgress: doc.workoutProgress && typeof doc.workoutProgress === "object" ? doc.workoutProgress : {},
   };
 }
 
@@ -78,9 +80,19 @@ export async function PATCH(request: Request) {
   if (body.steps !== undefined && (!Number.isInteger(body.steps) || (body.steps as number) < 0 || (body.steps as number) > 2_000_000)) return NextResponse.json({ error: "Invalid steps" }, { status: 400 });
   if (body.water !== undefined && (!Number.isInteger(body.water) || (body.water as number) < 0 || (body.water as number) > 8)) return NextResponse.json({ error: "Invalid water count" }, { status: 400 });
   if (body.routineCompleted !== undefined && (!Array.isArray(body.routineCompleted) || body.routineCompleted.length > 50 || body.routineCompleted.some((item) => typeof item !== "boolean"))) return NextResponse.json({ error: "Invalid routine progress" }, { status: 400 });
+  if (body.workoutProgress !== undefined && (!body.workoutProgress || typeof body.workoutProgress !== "object" || Array.isArray(body.workoutProgress))) return NextResponse.json({ error: "Invalid workout progress" }, { status: 400 });
   if (body.steps !== undefined) update.steps = body.steps;
   if (body.water !== undefined) update.water = body.water;
   if (body.routineCompleted !== undefined) update.routineCompleted = body.routineCompleted;
+  if (body.workoutProgress !== undefined) {
+    for (const [day, value] of Object.entries(body.workoutProgress as Record<string, unknown>)) {
+      if (!/^[A-Za-z]+$/.test(day) || !value || typeof value !== "object" || Array.isArray(value)) return NextResponse.json({ error: "Invalid workout progress" }, { status: 400 });
+      const workout = value as { completed?: unknown; exercises?: unknown };
+      if (workout.completed !== undefined && typeof workout.completed !== "boolean") return NextResponse.json({ error: "Invalid workout completion" }, { status: 400 });
+      if (workout.exercises !== undefined && (!Array.isArray(workout.exercises) || workout.exercises.length > 20 || workout.exercises.some((item) => typeof item !== "string"))) return NextResponse.json({ error: "Invalid workout exercises" }, { status: 400 });
+      update[`workoutProgress.${day}`] = workout;
+    }
+  }
 
   try {
     const collection = await getCollection();

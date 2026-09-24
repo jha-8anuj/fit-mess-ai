@@ -120,9 +120,11 @@ const workoutCover: Record<string, string> = {
 export default function WorkoutsClient({ user }: { user: ProfileUser }) {
   const [currentDay, setCurrentDay] = useState("Monday");
   const [selectedDay, setSelectedDay] = useState("Monday");
+  const [todayKey, setTodayKey] = useState("");
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const day = new Date().toLocaleDateString("en-US", { weekday: "long" });
+      setTodayKey(new Date().toLocaleDateString("en-CA"));
       setCurrentDay(day);
       setSelectedDay(day);
     }, 0);
@@ -152,13 +154,15 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
     && !completedWorkoutDays[selectedDay];
 
   const toggleExercise = (exerciseName: string) => {
+    const nextForDay = {
+      ...completedByDay[selectedDay],
+      [exerciseName]: !exercises.find((exercise) => exercise.name === exerciseName)?.completed,
+    };
     setCompletedByDay((previous) => ({
       ...previous,
-      [selectedDay]: {
-        ...previous[selectedDay],
-        [exerciseName]: !exercises.find((exercise) => exercise.name === exerciseName)?.completed,
-      },
+      [selectedDay]: nextForDay,
     }));
+    persistWorkout(selectedDay, nextForDay, completedWorkoutDays[selectedDay] ?? false);
   };
 
   const selectDay = (day: string) => {
@@ -171,15 +175,22 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
       return;
     }
 
+    const nextExercises = Object.fromEntries(
+      todayWorkout.exercises.map((exercise) => [exercise.name, true])
+    );
     setCompletedByDay((previous) => ({
       ...previous,
-      [selectedDay]: Object.fromEntries(
-        todayWorkout.exercises.map((exercise) => [exercise.name, true])
-      ),
+      [selectedDay]: nextExercises,
     }));
     setCompletedWorkoutDays((previous) => ({ ...previous, [selectedDay]: true }));
+    persistWorkout(selectedDay, nextExercises, true);
     setStartedDay(null);
   };
+
+  function persistWorkout(day: string, exerciseMap: Record<string, boolean>, completed: boolean) {
+    if (!todayKey) return;
+    void fetch("/api/wellness", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date: todayKey, workoutProgress: { [day]: { completed, exercises: Object.keys(exerciseMap).filter((name) => exerciseMap[name]) } } }) }).catch(() => undefined);
+  }
 
   const isRestDay = exercises.length === 0;
 
@@ -199,6 +210,19 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
     localStorage.setItem("fitai-workout-progress", JSON.stringify({ completedByDay }));
     localStorage.setItem("fitai-workout-days", JSON.stringify(completedWorkoutDays));
   }, [completedByDay, completedWorkoutDays]);
+
+  useEffect(() => {
+    if (!todayKey) return;
+    void fetch(`/api/wellness?date=${encodeURIComponent(todayKey)}`).then((response) => response.ok ? response.json() : null).then((data: { current?: { workoutProgress?: Record<string, { completed?: boolean; exercises?: string[] }> } } | null) => {
+      const progress = data?.current?.workoutProgress;
+      if (!progress) return;
+      const exerciseState: Record<string, Record<string, boolean>> = {};
+      const dayState: Record<string, boolean> = {};
+      Object.entries(progress).forEach(([day, value]) => { exerciseState[day] = Object.fromEntries((value.exercises ?? []).map((name) => [name, true])); dayState[day] = Boolean(value.completed); });
+      setCompletedByDay((previous) => ({ ...previous, ...exerciseState }));
+      setCompletedWorkoutDays((previous) => ({ ...previous, ...dayState }));
+    }).catch(() => undefined);
+  }, [todayKey]);
 
   return <main className="app-page">
     <div className="page-container">
