@@ -89,6 +89,16 @@ const workoutMeta: Record<string, { duration: string; level: string; tip: string
   Sunday: { duration: "Recovery", level: "Reset", tip: "Rest is where your body adapts and gets stronger." },
 };
 
+const workoutCover: Record<string, string> = {
+  Monday: "/exercises/pushups.jpg",
+  Tuesday: "/exercises/bench-press.jpg",
+  Wednesday: "/exercises/shoulder-press.jpg",
+  Thursday: "/exercises/bicep.jpg",
+  Friday: "/exercises/mountain-climber.jpg",
+  Saturday: "/exercises/plank.jpg",
+  Sunday: "/dashboard/mountains.jpg",
+};
+
 export default function WorkoutsClient({ user }: { user: ProfileUser }) {
   const [currentDay, setCurrentDay] = useState("Monday");
   const [selectedDay, setSelectedDay] = useState("Monday");
@@ -177,8 +187,8 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
       <PageHeader eyebrow="Workouts" title="Make every rep count." description="A little effort today. A stronger you tomorrow." user={user} />
       <section aria-label="Workout days" className="surface overflow-x-auto p-2">
         <div className="grid min-w-[690px] grid-cols-7 gap-1">
-          {workoutPlans.map((plan) => <button type="button" key={plan.day} onClick={() => selectDay(plan.day)} aria-pressed={plan.day === selectedDay} className={"relative rounded-2xl px-3 py-4 text-left transition " + (plan.day === selectedDay ? "bg-[#153b2e] text-white shadow-sm" : "text-[#829175] hover:bg-[#f2f5eb]")}>
-            <span className={"text-[9px] uppercase tracking-[0.15em] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#acb59f]")}>{plan.day === currentDay ? "Today" : plan.day.slice(0, 3)}</span><span className="mt-2 block text-sm font-semibold">{plan.day}</span><span className={"mt-1 block text-[10px] " + (plan.day === selectedDay ? "text-[#a6bba7]" : "text-[#a4ae98]")}>{plan.focus}</span><span className={"mt-2 block text-[9px] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#a4ae98]")}>{plan.calories ? plan.calories + " kcal" : "Recovery"}</span>
+          {workoutPlans.map((plan) => <button type="button" key={plan.day} onClick={() => selectDay(plan.day)} aria-pressed={plan.day === selectedDay} className={"relative overflow-hidden rounded-2xl px-3 py-3 text-left transition " + (plan.day === selectedDay ? "bg-[#153b2e] text-white shadow-sm" : "text-[#829175] hover:bg-[#f2f5eb]")}>
+            <div className="relative mb-3 h-12 overflow-hidden rounded-xl"><Image src={workoutCover[plan.day]} alt="" fill unoptimized sizes="120px" className={"object-cover " + (plan.day === selectedDay ? "opacity-80" : "opacity-65")} /><div className="absolute inset-0 bg-gradient-to-t from-[#153b2e88] to-transparent" /></div><span className={"text-[9px] uppercase tracking-[0.15em] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#acb59f]")}>{plan.day === currentDay ? "Today" : plan.day.slice(0, 3)}</span><span className="mt-1 block text-sm font-semibold">{plan.day}</span><span className={"mt-1 block text-[10px] " + (plan.day === selectedDay ? "text-[#a6bba7]" : "text-[#a4ae98]")}>{plan.focus}</span><span className={"mt-2 block text-[9px] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#a4ae98]")}>{plan.calories ? plan.calories + " kcal" : "Recovery"}</span>
           </button>)}
         </div>
       </section>
@@ -211,7 +221,7 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
           {!isRestDay && <div className="border-t border-[#edf0e7] bg-[#fafbf7] p-5 sm:p-6"><button type="button" onClick={completeWorkout} disabled={!canCompleteWorkout} className="action-primary w-full"><Check size={17} />{completedWorkoutDays[selectedDay] ? "Session complete. Well done!" : "Finish workout"}</button><p className="mt-3 text-center text-[11px] text-[#9ba58e]">{selectedDay !== currentDay ? "Select today's tab to complete your session." : completedWorkoutDays[selectedDay] ? "That's another little win in the books." : "Start your workout and check off every exercise to finish."}</p></div>}
         </section>
         <aside className="space-y-5">
-          <section className="surface"><SectionHeading title="Your week in motion" subtitle="A balanced split for the whole week." /><div className="space-y-1 px-4 pb-5">{workoutPlans.map((plan) => <button type="button" key={plan.day} onClick={() => selectDay(plan.day)} aria-pressed={selectedDay === plan.day} className={"flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition " + (selectedDay === plan.day ? "bg-[#edf3e1]" : "hover:bg-[#f7f9f2]")}><span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] " + (completedWorkoutDays[plan.day] ? "bg-[#839f59] text-white" : "bg-[#f0f2e9] text-[#a4af93]")}>{completedWorkoutDays[plan.day] ? <Check size={13} /> : plan.day.slice(0, 1)}</span><span className="text-xs font-medium">{plan.day}</span><span className="ml-auto text-[10px] text-[#849371]">{plan.focus}</span></button>)}</div></section>
+          <section className="surface"><SectionHeading title="Your week in motion" subtitle="A balanced split for the whole week." /><div className="space-y-1 px-4 pb-5">{workoutPlans.map((plan) => <button type="button" key={plan.day} onClick={() => selectDay(plan.day)} aria-pressed={selectedDay === plan.day} className={"flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition " + (selectedDay === plan.day ? "bg-[#edf3e1]" : "hover:bg-[#f7f9f2]")}><span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg"><Image src={workoutCover[plan.day]} alt="" fill unoptimized sizes="36px" className="object-cover" /><span className={"absolute inset-0 flex items-center justify-center bg-[#153b2e55] text-[9px] " + (completedWorkoutDays[plan.day] ? "text-white" : "text-transparent")}>{completedWorkoutDays[plan.day] && <Check size={13} />}</span></span><span className="text-xs font-medium">{plan.day}</span><span className="ml-auto text-[10px] text-[#849371]">{plan.focus}</span></button>)}</div></section>
           <section className="surface flex items-center justify-around gap-4 p-5"><ProgressRing value={progress} label="Session" /><div><p className="eyebrow">Your momentum</p><p className="mt-3 text-sm font-semibold">{completedExercises} exercises done.</p><p className="mt-2 max-w-32 text-xs leading-5 text-[#8b9389]">Celebrate each rep. Progress adds up.</p></div></section>
           <section className="rounded-3xl bg-[#edf1e3] p-6"><span className="flex items-center gap-2 text-xs font-semibold text-[#5f773f]"><Lightbulb size={17} /> A little reminder</span><p className="mt-3 text-sm leading-7 text-[#859470]">Warm up before you start, focus on controlled movement, and listen to your body. Your pace is the right pace.</p></section>
         </aside>
