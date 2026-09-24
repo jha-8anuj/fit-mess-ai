@@ -31,6 +31,11 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
       const hour = now.getHours();
       setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
       const today = now.toLocaleDateString("en-CA");
+      if (localStorage.getItem(routineDateKey) !== today) {
+        localStorage.setItem(routineDateKey, today);
+        localStorage.setItem(routineCompletedKey, JSON.stringify(routine.map(() => false)));
+        localStorage.setItem(routineAskedKey, JSON.stringify([]));
+      }
       setTodayKey(today);
       setSelectedDateKey(today);
       setTodayLabel(now.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }));
