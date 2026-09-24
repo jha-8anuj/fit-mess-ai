@@ -98,12 +98,12 @@ const workoutPlans: WorkoutPlan[] = [
 ];
 
 const workoutMeta: Record<string, { duration: string; level: string; tip: string }> = {
-  Monday: { duration: "40 min", level: "Strength", tip: "Build a strong push with controlled reps." },
-  Tuesday: { duration: "45 min", level: "Strength", tip: "Keep your back long and make every pull count." },
-  Wednesday: { duration: "35 min", level: "Mobility + strength", tip: "Move smoothly and leave space for recovery." },
-  Thursday: { duration: "35 min", level: "Upper body", tip: "Light, focused work for powerful arms." },
-  Friday: { duration: "50 min", level: "Lower body", tip: "Strong legs create an even stronger foundation." },
-  Saturday: { duration: "30 min", level: "Conditioning", tip: "Raise your heart rate, then finish proud." },
+  Monday: { duration: "1 hr 30 min", level: "Strength", tip: "Build a strong push with controlled reps." },
+  Tuesday: { duration: "1 hr 30 min", level: "Strength", tip: "Keep your back long and make every pull count." },
+  Wednesday: { duration: "1 hr 30 min", level: "Mobility + strength", tip: "Move smoothly and leave space for recovery." },
+  Thursday: { duration: "1 hr 30 min", level: "Upper body", tip: "Light, focused work for powerful arms." },
+  Friday: { duration: "1 hr 30 min", level: "Lower body", tip: "Strong legs create an even stronger foundation." },
+  Saturday: { duration: "1 hr 30 min", level: "Conditioning", tip: "Raise your heart rate, then finish proud." },
   Sunday: { duration: "Recovery", level: "Reset", tip: "Rest is where your body adapts and gets stronger." },
 };
 
