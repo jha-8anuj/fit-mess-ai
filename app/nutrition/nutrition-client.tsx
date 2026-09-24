@@ -30,7 +30,7 @@ export default function NutritionClient({ user }: { user: ProfileUser }) {
   const [dayNumber, setDayNumber] = useState(0);
   const [currentDay, setCurrentDay] = useState("");
   const [weightKg, setWeightKg] = useState<number | null>(null);
-  const dailyMeals = mealSets[dayNumber];
+  const dailyMeals = mealSets[dayNumber % mealSets.length] ?? meals;
   const totalCalories = dailyMeals.reduce((sum, meal) => sum + meal.calories, 0);
   const eatenCalories = dailyMeals.reduce((sum, meal, index) => sum + (completed[index] ? meal.calories : 0), 0);
   const proteinTarget = weightKg ? Math.round(weightKg * 1.6) : 80;
