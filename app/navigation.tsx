@@ -9,9 +9,9 @@ const navigationItems = [
   { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Daily routine", icon: ClipboardList, href: "/Routine" },
   { label: "Workouts", icon: Dumbbell, href: "/workouts" },
+  { label: "Nutrition", icon: Utensils, href: "/nutrition" },
 ];
 const upcomingItems = [
-  { label: "Nutrition", icon: Utensils },
   { label: "Progress", icon: ChartNoAxesCombined },
   { label: "AI coach", icon: Sparkles },
 ];
