@@ -27,8 +27,11 @@ const workoutPlans: WorkoutPlan[] = [
     focus: "Chest",
     calories: 320,
     exercises: [
-      { name: "Push Ups", sets: "3 sets × 12 reps", muscle: "Chest", image: "/exercises/pushups.jpg", completed: true },
+      { name: "Push Ups", sets: "3 sets × 12 reps", muscle: "Chest", image: "/exercises/pushups.jpg", completed: false },
       { name: "Dumbbell Bench Press", sets: "3 sets × 10 reps", muscle: "Chest", image: "/exercises/bench-press.jpg", completed: false },
+      { name: "Incline Push Ups", sets: "3 sets × 12 reps", muscle: "Chest", image: "/exercises/pushups.jpg", completed: false },
+      { name: "Chest Press", sets: "3 sets × 10 reps", muscle: "Chest", image: "/exercises/bench-press.jpg", completed: false },
+      { name: "Slow Push Ups", sets: "2 sets × 8 reps", muscle: "Chest", image: "/exercises/pushups.jpg", completed: false },
     ],
   },
   {
@@ -38,6 +41,9 @@ const workoutPlans: WorkoutPlan[] = [
     exercises: [
       { name: "Bent Over Row", sets: "3 sets × 12 reps", muscle: "Back", image: "/exercises/bench-press.jpg", completed: false },
       { name: "Reverse Fly", sets: "3 sets × 12 reps", muscle: "Back", image: "/exercises/shoulder-press.jpg", completed: false },
+      { name: "Single Arm Row", sets: "3 sets × 10 reps", muscle: "Back", image: "/exercises/bench-press.jpg", completed: false },
+      { name: "Wide Rows", sets: "3 sets × 12 reps", muscle: "Back", image: "/exercises/bench-press.jpg", completed: false },
+      { name: "Superman Hold", sets: "3 sets × 30 sec", muscle: "Back", image: "/exercises/plank.jpg", completed: false },
     ],
   },
   {
@@ -47,6 +53,9 @@ const workoutPlans: WorkoutPlan[] = [
     exercises: [
       { name: "Shoulder Press", sets: "3 sets × 12 reps", muscle: "Shoulders", image: "/exercises/shoulder-press.jpg", completed: false },
       { name: "Lateral Raises", sets: "3 sets × 15 reps", muscle: "Shoulders", image: "/exercises/shoulder-press.jpg", completed: false },
+      { name: "Front Raises", sets: "3 sets × 12 reps", muscle: "Shoulders", image: "/exercises/shoulder-press.jpg", completed: false },
+      { name: "Arnold Press", sets: "3 sets × 10 reps", muscle: "Shoulders", image: "/exercises/shoulder-press.jpg", completed: false },
+      { name: "Shoulder Taps", sets: "3 sets × 20 taps", muscle: "Shoulders", image: "/exercises/pushups.jpg", completed: false },
     ],
   },
   {
@@ -56,6 +65,9 @@ const workoutPlans: WorkoutPlan[] = [
     exercises: [
       { name: "Bicep Curl", sets: "3 sets × 12 reps", muscle: "Biceps", image: "/exercises/bicep.jpg", completed: false },
       { name: "Tricep Extension", sets: "3 sets × 12 reps", muscle: "Triceps", image: "/exercises/tricep.jpg", completed: false },
+      { name: "Hammer Curl", sets: "3 sets × 10 reps", muscle: "Biceps", image: "/exercises/bicep.jpg", completed: false },
+      { name: "Tricep Kickback", sets: "3 sets × 12 reps", muscle: "Triceps", image: "/exercises/tricep.jpg", completed: false },
+      { name: "Close Grip Push Ups", sets: "2 sets × 10 reps", muscle: "Arms", image: "/exercises/pushups.jpg", completed: false },
     ],
   },
   {
@@ -65,6 +77,9 @@ const workoutPlans: WorkoutPlan[] = [
     exercises: [
       { name: "Bodyweight Squats", sets: "4 sets × 15 reps", muscle: "Legs", image: "/exercises/pushups.jpg", completed: false },
       { name: "Reverse Lunges", sets: "3 sets × 12 reps", muscle: "Legs", image: "/exercises/mountain-climber.jpg", completed: false },
+      { name: "Split Squats", sets: "3 sets × 10 reps", muscle: "Legs", image: "/exercises/mountain-climber.jpg", completed: false },
+      { name: "Glute Bridge", sets: "3 sets × 15 reps", muscle: "Glutes", image: "/exercises/plank.jpg", completed: false },
+      { name: "Wall Sit", sets: "3 sets × 30 sec", muscle: "Legs", image: "/exercises/plank.jpg", completed: false },
     ],
   },
   {
@@ -74,6 +89,9 @@ const workoutPlans: WorkoutPlan[] = [
     exercises: [
       { name: "Plank", sets: "3 sets × 45 sec", muscle: "Core", image: "/exercises/plank.jpg", completed: false },
       { name: "Mountain Climbers", sets: "3 sets × 30 sec", muscle: "Cardio", image: "/exercises/mountain-climber.jpg", completed: false },
+      { name: "High Knees", sets: "3 sets × 30 sec", muscle: "Cardio", image: "/exercises/mountain-climber.jpg", completed: false },
+      { name: "Bicycle Crunches", sets: "3 sets × 20 reps", muscle: "Core", image: "/exercises/plank.jpg", completed: false },
+      { name: "Plank Jacks", sets: "2 sets × 20 reps", muscle: "Core", image: "/exercises/plank.jpg", completed: false },
     ],
   },
   { day: "Sunday", focus: "Rest Day", calories: 0, exercises: [] },
@@ -211,7 +229,7 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
       </div>
       <div className="grid items-start gap-5 xl:grid-cols-[1.7fr_1fr]">
         <section className="surface overflow-hidden">
-          <SectionHeading title="Your session plan" subtitle={isRestDay ? "Today's priority is recovery." : "Check off each exercise when you're finished."}><span className="pill">{todayWorkout.focus}</span></SectionHeading>
+          <SectionHeading title="Your session plan" subtitle={isRestDay ? "Today's priority is recovery." : "Five focused moves. Check each one off when you're finished."}><span className="pill">{todayWorkout.focus} · {exercises.length || 0} moves</span></SectionHeading>
           {isRestDay ? <div className="flex flex-col items-center border-t border-[#edf0e7] px-6 py-14 text-center"><span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#edf3e0] text-[#7f9a53]"><Leaf size={30} strokeWidth={1.5} /></span><h3 className="mt-5 text-lg font-semibold">Permission to slow down.</h3><p className="mt-3 max-w-xs text-sm leading-6 text-[#8b9389]">Hydrate, stretch gently and let your muscles recover. We'll be here for your next session.</p></div> :
           <><div className="relative mx-4 mt-1 h-32 overflow-hidden rounded-2xl sm:mx-6"><Image src={todayWorkout.exercises[0].image} alt={todayWorkout.focus + " workout"} fill unoptimized sizes="(max-width: 768px) 90vw, 640px" className="object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-[#153b2eaa] via-transparent to-transparent" /><span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-[#456137]">{todayWorkout.calories} kcal planned</span></div><div className="border-t border-[#edf0e7] px-4 sm:px-6">{exercises.map((exercise, index) => <article key={exercise.name} className="flex flex-wrap items-center gap-3 border-b border-[#edf0e7] py-5 last:border-0 sm:gap-4">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#f1f3ec] sm:h-20 sm:w-24"><Image src={exercise.image} alt={exercise.name} fill unoptimized sizes="96px" className="object-cover" /></div>
