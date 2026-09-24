@@ -9,9 +9,9 @@ import { PageHeader, ProgressRing, SectionHeading, StatCard, type ProfileUser } 
 import { routine, routineCompletedKey, routineDateKey } from "@/app/routine-data";
 
 const meals = [
-  { name: "Breakfast", time: "7:30 AM", meal: "Oats, banana & nuts", calories: "450 kcal", image: "/dashboard/breakfast-oats.png" },
+  { name: "Breakfast", time: "7:30 AM", meal: "Oats, banana & nuts", calories: "450 kcal", image: "/dashboard/breakfast-oats.jpg" },
   { name: "Lunch", time: "1:00 PM", meal: "Rice, chicken & vegetables", calories: "550 kcal", image: "/dashboard/lunch.jpg" },
-  { name: "Snack", time: "5:00 PM", meal: "Apple & almonds", calories: "200 kcal", image: "/dashboard/snack-apple-almonds.png" },
+  { name: "Snack", time: "5:00 PM", meal: "Apple & almonds", calories: "200 kcal", image: "/dashboard/snack-apple-almonds.jpg" },
   { name: "Dinner", time: "9:00 PM", meal: "Salad & mixed vegetables", calories: "400 kcal", image: "/dashboard/dinner.jpg" },
 ];
 
