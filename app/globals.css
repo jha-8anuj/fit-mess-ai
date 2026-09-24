@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f5f0;
+  --foreground: #192e26;
+  --forest: #153b2e;
+  --lime: #d0f268;
+  --muted: #778078;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection { background: #d0f268; color: #153b2e; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+button:not(:disabled), a { cursor: pointer; }
+:focus-visible { outline: 2px solid #548b3f; outline-offset: 4px; }
+html { scroll-behavior: smooth; }
+
+@layer components {
+  .app-page { @apply min-h-screen min-w-0 flex-1 px-4 pb-28 pt-24 sm:px-7 lg:px-9 lg:pb-10 lg:pt-8 xl:px-11; }
+  .page-container { @apply mx-auto max-w-[1400px] space-y-7; }
+  .surface { @apply rounded-3xl border border-[#e2e7df] bg-white shadow-[0_4px_24px_-16px_rgba(23,59,47,0.18)]; }
+  .eyebrow { @apply text-[10px] font-bold uppercase tracking-[0.19em] text-[#778078]; }
+  .pill { @apply inline-flex items-center gap-1.5 rounded-full bg-[#edf3e5] px-3 py-1.5 text-[11px] font-semibold text-[#436136]; }
+  .action-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#153b2e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#275742] disabled:cursor-not-allowed disabled:opacity-40; }
+  .action-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#dfe5da] bg-white px-4 py-2.5 text-sm font-semibold text-[#314a3d] transition hover:bg-[#f4f7f0]; }
+  .text-link { @apply inline-flex items-center gap-1.5 text-xs font-semibold text-[#486f32] transition hover:text-[#153b2e]; }
+  .icon-tile { @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl; }
+}
+
+.hero-pattern {
+  background-image: radial-gradient(circle at 100% 0%, #d0f26820, transparent 48%), repeating-radial-gradient(circle at 95% 55%, transparent 0 38px, #ffffff08 39px 40px);
+}
+.auth-art { background: linear-gradient(160deg, #153b2e, #0a241b); }
+.page-container { animation: page-enter 400ms ease-out both; }
+@keyframes page-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
