@@ -79,6 +79,16 @@ const workoutPlans: WorkoutPlan[] = [
   { day: "Sunday", focus: "Rest Day", calories: 0, exercises: [] },
 ];
 
+const workoutMeta: Record<string, { duration: string; level: string; tip: string }> = {
+  Monday: { duration: "40 min", level: "Strength", tip: "Build a strong push with controlled reps." },
+  Tuesday: { duration: "45 min", level: "Strength", tip: "Keep your back long and make every pull count." },
+  Wednesday: { duration: "35 min", level: "Mobility + strength", tip: "Move smoothly and leave space for recovery." },
+  Thursday: { duration: "35 min", level: "Upper body", tip: "Light, focused work for powerful arms." },
+  Friday: { duration: "50 min", level: "Lower body", tip: "Strong legs create an even stronger foundation." },
+  Saturday: { duration: "30 min", level: "Conditioning", tip: "Raise your heart rate, then finish proud." },
+  Sunday: { duration: "Recovery", level: "Reset", tip: "Rest is where your body adapts and gets stronger." },
+};
+
 export default function WorkoutsClient({ user }: { user: ProfileUser }) {
   const [currentDay, setCurrentDay] = useState("Monday");
   const [selectedDay, setSelectedDay] = useState("Monday");
@@ -94,6 +104,7 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
   const [completedWorkoutDays, setCompletedWorkoutDays] = useState<Record<string, boolean>>({});
   const [startedDay, setStartedDay] = useState<string | null>(null);
   const todayWorkout = workoutPlans.find((plan) => plan.day === selectedDay) ?? workoutPlans[0];
+  const selectedMeta = workoutMeta[selectedDay];
   const exercises = todayWorkout.exercises.map((exercise) => ({
     ...exercise,
     completed: completedByDay[selectedDay]?.[exercise.name] ?? exercise.completed,
@@ -144,13 +155,30 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
 
   const isRestDay = exercises.length === 0;
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem("fitai-workout-progress") ?? "null");
+        if (saved && typeof saved === "object") setCompletedByDay(saved.completedByDay ?? {});
+        const finished = JSON.parse(localStorage.getItem("fitai-workout-days") ?? "null");
+        if (finished && typeof finished === "object") setCompletedWorkoutDays(finished);
+      } catch { /* Start with a clean plan when stored data is invalid. */ }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("fitai-workout-progress", JSON.stringify({ completedByDay }));
+    localStorage.setItem("fitai-workout-days", JSON.stringify(completedWorkoutDays));
+  }, [completedByDay, completedWorkoutDays]);
+
   return <main className="app-page">
     <div className="page-container">
       <PageHeader eyebrow="Workouts" title="Make every rep count." description="A little effort today. A stronger you tomorrow." user={user} />
       <section aria-label="Workout days" className="surface overflow-x-auto p-2">
         <div className="grid min-w-[690px] grid-cols-7 gap-1">
           {workoutPlans.map((plan) => <button type="button" key={plan.day} onClick={() => selectDay(plan.day)} aria-pressed={plan.day === selectedDay} className={"relative rounded-2xl px-3 py-4 text-left transition " + (plan.day === selectedDay ? "bg-[#153b2e] text-white shadow-sm" : "text-[#829175] hover:bg-[#f2f5eb]")}>
-            <span className={"text-[9px] uppercase tracking-[0.15em] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#acb59f]")}>{plan.day === currentDay ? "Today" : plan.day.slice(0, 3)}</span><span className="mt-2 block text-sm font-semibold">{plan.day}</span><span className={"mt-1 block text-[10px] " + (plan.day === selectedDay ? "text-[#a6bba7]" : "text-[#a4ae98]")}>{plan.focus}</span>
+            <span className={"text-[9px] uppercase tracking-[0.15em] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#acb59f]")}>{plan.day === currentDay ? "Today" : plan.day.slice(0, 3)}</span><span className="mt-2 block text-sm font-semibold">{plan.day}</span><span className={"mt-1 block text-[10px] " + (plan.day === selectedDay ? "text-[#a6bba7]" : "text-[#a4ae98]")}>{plan.focus}</span><span className={"mt-2 block text-[9px] " + (plan.day === selectedDay ? "text-[#d0f268]" : "text-[#a4ae98]")}>{plan.calories ? plan.calories + " kcal" : "Recovery"}</span>
           </button>)}
         </div>
       </section>
@@ -160,13 +188,13 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
         <div className="max-w-lg p-6 sm:p-9">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[10px] uppercase tracking-[0.13em] text-[#d0f268]">{isRestDay ? <Moon size={13} /> : <Dumbbell size={13} />}{isRestDay ? "RECOVER & RECHARGE" : "YOUR " + selectedDay.toUpperCase() + " SESSION"}</span>
           <h2 className="mt-5 text-4xl font-medium tracking-[-0.04em] sm:text-[44px]">{isRestDay ? "Rest is progress, too." : todayWorkout.focus + " day."}</h2>
-          <p className="mt-3 text-sm leading-6 text-[#b0c4b5]">{isRestDay ? "Slow down, stretch a little and give yourself room to recover." : "Show up, find your focus, and build strength one rep at a time."}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-[#b7c9bd]"><span className="flex items-center gap-1.5"><Clock size={14} />{isRestDay ? "Your pace" : "45 min planned"}</span>{!isRestDay && <><span className="h-1 w-1 rounded-full bg-[#8eab96]" /><span>{exercises.length} exercises</span></>}</div>
+          <p className="mt-3 text-sm leading-6 text-[#b0c4b5]">{selectedMeta.tip}</p>
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[#b7c9bd]"><span className="flex items-center gap-1.5"><Clock size={14} />{selectedMeta.duration}</span><span className="rounded-full border border-white/15 px-2.5 py-1">{selectedMeta.level}</span>{!isRestDay && <><span className="h-1 w-1 rounded-full bg-[#8eab96]" /><span>{exercises.length} exercises</span></>}</div>
           {!isRestDay && <button type="button" aria-pressed={startedDay === selectedDay} onClick={() => setStartedDay(startedDay === selectedDay ? null : selectedDay)} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#d0f268] px-5 py-3 text-xs font-semibold text-[#153b2e] transition hover:bg-[#dff791]">{startedDay === selectedDay ? <Pause size={15} /> : <Play size={15} />}{startedDay === selectedDay ? "Pause workout" : "Start workout"}<ArrowUpRight size={15} className="ml-2" /></button>}
         </div>
       </section>
       <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
-        <StatCard label="Planned duration" value={isRestDay ? "Rest day" : "45 min"} detail={isRestDay ? "Take it easy today" : "Make time for your strength"} icon={Clock} />
+        <StatCard label="Planned duration" value={selectedMeta.duration} detail={isRestDay ? "Take it easy today" : "Make time for your strength"} icon={Clock} />
         <StatCard label="Estimated energy" value={burnedCalories + " kcal"} detail="Based on completed exercises" icon={Flame} tone="orange" />
         <StatCard label="Exercises done" value={completedExercises + " / " + exercises.length} detail={isRestDay ? "Recovery is the goal" : "Your session progress"} icon={Target} tone="blue" progress={progress} />
         <StatCard label="Sessions completed" value={Object.values(completedWorkoutDays).filter(Boolean).length + " / 6"} detail="Keep building consistency" icon={CheckCheck} tone="purple" />
