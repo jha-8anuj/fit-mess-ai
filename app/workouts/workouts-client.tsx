@@ -133,6 +133,7 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
   const [completedByDay, setCompletedByDay] = useState<Record<string, Record<string, boolean>>>({});
   const [completedWorkoutDays, setCompletedWorkoutDays] = useState<Record<string, boolean>>({});
   const [startedDay, setStartedDay] = useState<string | null>(null);
+  const [timerSeconds, setTimerSeconds] = useState(5400);
   const todayWorkout = workoutPlans.find((plan) => plan.day === selectedDay) ?? workoutPlans[0];
   const selectedMeta = workoutMeta[selectedDay];
   const exercises = todayWorkout.exercises.map((exercise) => ({
@@ -168,7 +169,36 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
   const selectDay = (day: string) => {
     setSelectedDay(day);
     setStartedDay(null);
+    setTimerSeconds(5400);
   };
+
+  const isRestDay = exercises.length === 0;
+
+  useEffect(() => {
+    if (startedDay !== selectedDay || isRestDay) return;
+    const timer = window.setInterval(() => {
+      setTimerSeconds((seconds) => {
+        if (seconds <= 1) {
+          setStartedDay(null);
+          return 0;
+        }
+        return seconds - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [startedDay, selectedDay, isRestDay]);
+
+  function toggleWorkout() {
+    if (isRestDay) return;
+    setStartedDay((day) => day === selectedDay ? null : selectedDay);
+  }
+
+  function formatTimer(seconds: number) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+    const remaining = (seconds % 60).toString().padStart(2, "0");
+    return `${hours}:${minutes}:${remaining}`;
+  }
 
   const completeWorkout = () => {
     if (!canCompleteWorkout) {
@@ -191,8 +221,6 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
     if (!todayKey) return;
     void fetch("/api/wellness", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date: todayKey, workoutProgress: { [day]: { completed, exercises: Object.keys(exerciseMap).filter((name) => exerciseMap[name]) } } }) }).catch(() => undefined);
   }
-
-  const isRestDay = exercises.length === 0;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -242,11 +270,11 @@ export default function WorkoutsClient({ user }: { user: ProfileUser }) {
           <h2 className="mt-5 text-4xl font-medium tracking-[-0.04em] sm:text-[44px]">{isRestDay ? "Rest is progress, too." : todayWorkout.focus + " day."}</h2>
           <p className="mt-3 text-sm leading-6 text-[#b0c4b5]">{selectedMeta.tip}</p>
           <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[#b7c9bd]"><span className="flex items-center gap-1.5"><Clock size={14} />{selectedMeta.duration}</span><span className="rounded-full border border-white/15 px-2.5 py-1">{selectedMeta.level}</span>{!isRestDay && <><span className="h-1 w-1 rounded-full bg-[#8eab96]" /><span>{exercises.length} exercises</span></>}</div>
-          {!isRestDay && <button type="button" aria-pressed={startedDay === selectedDay} onClick={() => setStartedDay(startedDay === selectedDay ? null : selectedDay)} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#d0f268] px-5 py-3 text-xs font-semibold text-[#153b2e] transition hover:bg-[#dff791]">{startedDay === selectedDay ? <Pause size={15} /> : <Play size={15} />}{startedDay === selectedDay ? "Pause workout" : "Start workout"}<ArrowUpRight size={15} className="ml-2" /></button>}
+          {!isRestDay && <button type="button" aria-pressed={startedDay === selectedDay} onClick={toggleWorkout} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#d0f268] px-5 py-3 text-xs font-semibold text-[#153b2e] transition hover:bg-[#dff791]">{startedDay === selectedDay ? <Pause size={15} /> : <Play size={15} />}{startedDay === selectedDay ? "Pause workout" : "Start workout"}<ArrowUpRight size={15} className="ml-2" /></button>}
         </div>
       </section>
       <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
-        <StatCard label="Planned duration" value={selectedMeta.duration} detail={isRestDay ? "Take it easy today" : "Make time for your strength"} icon={Clock} />
+        <StatCard label="Workout timer" value={isRestDay ? "Rest day" : formatTimer(timerSeconds)} detail={isRestDay ? "Take it easy today" : startedDay === selectedDay ? "Timer is running" : "Start when you're ready"} icon={Clock}><button type="button" onClick={toggleWorkout} disabled={isRestDay || timerSeconds === 0} className="action-secondary mt-3 w-full py-2 text-[11px]">{startedDay === selectedDay ? <><Pause size={13} /> Pause timer</> : <><Play size={13} /> Start workout</>}</button></StatCard>
         <StatCard label="Estimated energy" value={burnedCalories + " kcal"} detail="Based on completed exercises" icon={Flame} tone="orange" />
         <StatCard label="Exercises done" value={completedExercises + " / " + exercises.length} detail={isRestDay ? "Recovery is the goal" : "Your session progress"} icon={Target} tone="blue" progress={progress} />
         <StatCard label="Sessions completed" value={Object.values(completedWorkoutDays).filter(Boolean).length + " / 6"} detail="Keep building consistency" icon={CheckCheck} tone="purple" />
