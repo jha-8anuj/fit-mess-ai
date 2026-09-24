@@ -7,6 +7,7 @@ export type UserDocument = {
   email: string;
   passwordHash: string;
   createdAt: Date;
+  weightKg?: number;
 };
 
 export async function getUsersCollection(): Promise<Collection<UserDocument>> {

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, CheckCheck, Droplets, Dumbbell, Flame, Footprints, Leaf, Pause, Play, Sunrise, Utensils } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, CheckCheck, Droplets, Dumbbell, Flame, Footprints, Leaf, Pause, Play, Scale, Sunrise, Utensils, X } from "lucide-react";
 import { useStepCounter } from "@/components/use-step-counter";
 import { PageHeader, ProgressRing, SectionHeading, StatCard, type ProfileUser } from "@/components/ui/fitness";
 import { routine, routineAskedKey, routineCompletedKey, routineDateKey } from "@/app/routine-data";
@@ -23,6 +24,9 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
   const [completedRoutine, setCompletedRoutine] = useState<boolean[]>(() => routine.map(() => false));
   const [waterCount, setWaterCount] = useState(0);
   const [pendingTaskIndex, setPendingTaskIndex] = useState<number | null>(null);
+  const [weightKg, setWeightKg] = useState<number | null>(null);
+  const [weightInput, setWeightInput] = useState("");
+  const [showWeightPrompt, setShowWeightPrompt] = useState(false);
   const { stepCount, stepProgress, isTracking, toggleTracking } = useStepCounter(selectedDateKey || undefined);
 
   useEffect(() => {
@@ -65,6 +69,13 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
       if (Array.isArray(data.current.routineCompleted) && data.current.routineCompleted.length === routine.length) setCompletedRoutine(data.current.routineCompleted.map(Boolean));
     }).catch(() => undefined);
   }, [selectedDateKey]);
+
+  useEffect(() => {
+    void fetch("/api/profile").then((response) => response.ok ? response.json() : null).then((data: { weightKg?: number | null } | null) => {
+      if (typeof data?.weightKg === "number") setWeightKg(data.weightKg);
+      else setShowWeightPrompt(true);
+    }).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!selectedDateKey || selectedDateKey !== todayKey) return;
@@ -124,9 +135,17 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
     else saveProgress({ routineCompleted: next });
   }
 
+  function saveWeight(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = Number(weightInput);
+    if (!Number.isFinite(value) || value < 20 || value > 300) return;
+    void fetch("/api/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ weightKg: value }) }).then((response) => response.ok ? response.json() : null).then((data: { weightKg?: number } | null) => { if (typeof data?.weightKg === "number") { setWeightKg(data.weightKg); setShowWeightPrompt(false); } }).catch(() => undefined);
+  }
+
   const done = completedRoutine.filter(Boolean).length;
   const progress = Math.round(done / routine.length * 100);
   const calories = done * 60 + Math.round(stepCount * 0.04);
+  const proteinTarget = weightKg ? Math.round(weightKg * 1.6) : null;
   const nextTask = routine.find((_, index) => !completedRoutine[index]);
 
   return <main className="app-page">
@@ -154,10 +173,11 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
         </section>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 sm:gap-5">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5 sm:gap-5">
         <StatCard label="Habits completed" value={done + " / " + routine.length} detail="Every small win counts" icon={CheckCheck} progress={progress} />
         <StatCard label="Steps taken" value={stepCount.toLocaleString()} detail="Your goal · 10,000 steps" icon={Footprints} tone="orange" progress={stepProgress} />
         <StatCard label="Movement energy" value={<>{calories}<span className="ml-1 text-sm font-normal text-[#8b9389]">kcal</span></>} detail="Estimated from your activity" icon={Flame} tone="purple" progress={Math.min(100, Math.round(calories / 2000 * 100))} />
+        <StatCard label="Protein target" value={proteinTarget ? <>{proteinTarget}<span className="ml-1 text-sm font-normal text-[#8b9389]">g</span></> : "Set weight"} detail={weightKg ? "Based on 1.6g per kg" : "Tell us your weight"} icon={Scale} tone="orange"><button type="button" onClick={() => setShowWeightPrompt(true)} className="mt-3 text-[11px] font-semibold text-[#d58a50] hover:underline">{weightKg ? "Update weight" : "Add weight"}</button></StatCard>
         <StatCard label="Hydration goal" value={<>{waterCount}<span className="ml-1 text-sm font-normal text-[#8b9389]">/ 8 glasses</span></>} detail={waterCount ? "Nice — keep sipping through the day" : "A reminder to pause & hydrate"} icon={Droplets} tone="blue" progress={waterCount / 8 * 100}><button type="button" onClick={logWater} className="mt-3 text-[11px] font-semibold text-[#4d8fb6] hover:underline">+ Log one glass</button></StatCard>
       </div>
 
@@ -193,6 +213,7 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
       <p className="flex items-center justify-center gap-2 pb-2 text-[10px] text-[#a6ad9c]"><Leaf size={12} /> Progress is a practice, not a finish line.</p>
     </div>
     {pendingTaskIndex !== null && <div role="alert" className="fixed inset-x-4 bottom-24 z-50 ml-auto max-w-sm rounded-2xl border border-[#dce5d0] bg-white p-5 shadow-[0_12px_48px_#153b2e25] lg:bottom-6 lg:right-6"><p className="eyebrow flex items-center gap-2 text-[#769347]"><Sunrise size={13} /> Gentle check-in</p><p className="mt-2 text-sm font-semibold">Did you finish {routine[pendingTaskIndex].title.toLowerCase()}?</p><p className="mt-1 text-xs text-[#8b9389]">Your answer keeps today&apos;s progress accurate.</p><div className="mt-4 flex gap-2"><button type="button" onClick={() => answerRoutineReminder(true)} className="action-primary flex-1">Yes, done<Check size={15} /></button><button type="button" onClick={() => answerRoutineReminder(false)} className="action-secondary flex-1">Not yet</button></div></div>}
+    {showWeightPrompt && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#153b2e66] p-4 backdrop-blur-sm"><div role="dialog" aria-modal="true" className="surface w-full max-w-md p-6 shadow-2xl sm:p-8"><div className="flex items-start justify-between"><div><span className="icon-tile bg-[#fff1e6] text-[#d58a50]"><Scale size={20} /></span><h2 className="mt-4 text-xl font-semibold">Personalise your nutrition</h2><p className="mt-2 text-sm leading-6 text-[#778078]">Your weight helps us set a simple daily protein target.</p></div>{weightKg && <button type="button" aria-label="Close" onClick={() => setShowWeightPrompt(false)} className="rounded-lg p-2 text-[#8b9389] hover:bg-[#f2f5ec]"><X size={18} /></button>}</div><form onSubmit={saveWeight} className="mt-6"><label htmlFor="dashboard-weight" className="text-xs font-semibold text-[#52604e]">Your weight (kg)</label><div className="mt-2 flex gap-2"><input id="dashboard-weight" type="number" min="20" max="300" step="0.1" required value={weightInput} onChange={(event) => setWeightInput(event.target.value)} placeholder={weightKg ? String(weightKg) : "e.g. 68"} className="min-w-0 flex-1 rounded-xl border border-[#dfe7d7] bg-[#fbfcf8] px-4 py-3 text-sm outline-none focus:border-[#8baa65]" /><button type="submit" className="action-primary px-5">Save</button></div><p className="mt-3 text-[11px] text-[#9aa590]">Recommended target: about {weightInput && Number(weightInput) >= 20 ? Math.round(Number(weightInput) * 1.6) : proteinTarget ?? "—"}g protein/day.</p></form></div></div>}
   </main>;
 }
 
