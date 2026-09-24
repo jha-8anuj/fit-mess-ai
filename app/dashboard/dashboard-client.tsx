@@ -9,7 +9,7 @@ import { PageHeader, ProgressRing, SectionHeading, StatCard, type ProfileUser } 
 import { routine, routineCompletedKey, routineDateKey } from "@/app/routine-data";
 
 const meals = [
-  { name: "Breakfast", time: "7:30 AM", meal: "Oats, banana & nuts", calories: "450 kcal", image: "/dashboard/breakfast.jpg" },
+  { name: "Breakfast", time: "7:30 AM", meal: "Oats, banana & nuts", calories: "450 kcal", image: "/dashboard/breakfast-oats.png" },
   { name: "Lunch", time: "1:00 PM", meal: "Rice, chicken & vegetables", calories: "550 kcal", image: "/dashboard/lunch.jpg" },
   { name: "Snack", time: "5:00 PM", meal: "Apple & almonds", calories: "200 kcal", image: "/dashboard/snack.jpg" },
   { name: "Dinner", time: "9:00 PM", meal: "Salad & mixed vegetables", calories: "400 kcal", image: "/dashboard/dinner.jpg" },
@@ -141,9 +141,9 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
         <div className="space-y-5">
           <section className="surface overflow-hidden">
             <SectionHeading title="Fuel your day" subtitle="A balanced sample meal plan"><Utensils size={18} className="text-[#9dac88]" /></SectionHeading>
-            <div className="grid grid-cols-2 gap-3 px-5 pb-5 sm:px-6 sm:pb-6">{meals.map((meal) => <article key={meal.name} className="group overflow-hidden rounded-2xl border border-[#edf0e7]">
-              <div className="relative h-28 overflow-hidden sm:h-32"><Image src={meal.image} alt={meal.meal} fill sizes="(max-width: 640px) 40vw, 240px" className="object-cover transition duration-500 group-hover:scale-105" /><span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-semibold text-[#4e6045] backdrop-blur-sm">{meal.calories}</span></div>
-              <div className="p-3"><div className="flex flex-wrap items-center justify-between gap-1"><h3 className="text-xs font-semibold">{meal.name}</h3><span className="text-[9px] text-[#9ca590]">{meal.time}</span></div><p className="mt-1 text-[11px] leading-5 text-[#8b9389]">{meal.meal}</p></div>
+            <div className="grid grid-cols-2 gap-3 px-5 pb-5 sm:gap-4 sm:px-6 sm:pb-6">{meals.map((meal) => <article key={meal.name} className="group overflow-hidden rounded-2xl border border-[#edf0e7] bg-white transition duration-300 hover:-translate-y-0.5 hover:border-[#dce7ce] hover:shadow-[0_10px_24px_#153b2e0d]">
+              <div className="relative aspect-[4/3] overflow-hidden bg-[#f0f3e9]"><Image src={meal.image} alt={meal.meal} fill sizes="(max-width: 640px) 42vw, 230px" className="object-cover transition duration-500 group-hover:scale-105" /><div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#153b2e70] to-transparent" /><span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-semibold text-[#4e6045] shadow-sm backdrop-blur-sm">{meal.calories}</span></div>
+              <div className="p-3 sm:p-3.5"><div className="flex flex-wrap items-center justify-between gap-1"><h3 className="text-xs font-semibold">{meal.name}</h3><span className="text-[9px] text-[#9ca590]">{meal.time}</span></div><p className="mt-1 line-clamp-2 text-[11px] leading-5 text-[#8b9389]">{meal.meal}</p></div>
             </article>)}</div>
           </section>
           <section className="surface p-5 sm:p-6">
