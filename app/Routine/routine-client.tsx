@@ -41,6 +41,7 @@ export default function RoutineClient({ user }: { user: ProfileUser }) {
     () => routine.map((item) => item.completed)
   );
   const [pendingTaskIndex, setPendingTaskIndex] = useState<number | null>(null);
+  const [waterCount, setWaterCount] = useState(0);
 
   function persistRoutine(next: boolean[]) {
     const waterIndex = routine.findIndex((item) => item.title.toLowerCase().includes("water"));
@@ -78,6 +79,14 @@ export default function RoutineClient({ user }: { user: ProfileUser }) {
     }, 0);
 
     return () => window.clearTimeout(initializeTimer);
+  }, []);
+
+  useEffect(() => {
+    void fetch(`/api/wellness?date=${encodeURIComponent(new Date().toLocaleDateString("en-CA"))}`).then((response) => response.ok ? response.json() : null).then((data: { current?: { water?: number; routineCompleted?: boolean[] } } | null) => {
+      if (!data?.current) return;
+      if (typeof data.current.water === "number") setWaterCount(data.current.water);
+      if (Array.isArray(data.current.routineCompleted) && data.current.routineCompleted.length === routine.length) setCompleted(data.current.routineCompleted.map(Boolean));
+    }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -131,6 +140,12 @@ export default function RoutineClient({ user }: { user: ProfileUser }) {
     persistRoutine(next);
   }
 
+  function logWater() {
+    const next = Math.min(8, waterCount + 1);
+    setWaterCount(next);
+    void fetch("/api/wellness", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date: new Date().toLocaleDateString("en-CA"), water: next }) }).catch(() => undefined);
+  }
+
   const visibleTasks = routine.map((item, index) => ({ ...item, index })).filter((item) =>
     filter === "All habits" || (filter === "Completed" ? completed[item.index] : !completed[item.index])
   );
@@ -145,7 +160,7 @@ export default function RoutineClient({ user }: { user: ProfileUser }) {
       <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
         <StatCard label="Habits completed" value={completedTasks + " / " + routine.length} detail="One step at a time" icon={CheckCheck} progress={progress} />
         <StatCard label="Steps today" value={stepCount.toLocaleString()} detail="Your goal · 10,000 steps" icon={Footprints} tone="orange" progress={stepProgress} />
-        <StatCard label="Water goal" value="8 glasses" detail="Keep your bottle close" icon={Droplets} tone="blue" />
+        <StatCard label="Water goal" value={<>{waterCount}<span className="ml-1 text-sm font-normal text-[#8b9389]">/ 8 glasses</span></>} detail={waterCount ? "Keep the rhythm going" : "Keep your bottle close"} icon={Droplets} tone="blue" progress={waterCount / 8 * 100}><button type="button" onClick={logWater} className="mt-3 text-[11px] font-semibold text-[#4d8fb6] hover:underline">+ Log one glass</button></StatCard>
         <StatCard label="Rest goal" value="7–8 hours" detail="Recovery is part of the plan" icon={Moon} tone="purple" />
       </div>
       <div className="grid items-start gap-5 xl:grid-cols-[1.8fr_1fr]">

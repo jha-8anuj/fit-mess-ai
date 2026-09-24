@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, CalendarDays, Check, CheckCheck, Droplets, Dumbbell, Flame, Footprints, Leaf, Pause, Play, Sunrise, Utensils } from "lucide-react";
 import { useStepCounter } from "@/components/use-step-counter";
 import { PageHeader, ProgressRing, SectionHeading, StatCard, type ProfileUser } from "@/components/ui/fitness";
-import { routine, routineCompletedKey, routineDateKey } from "@/app/routine-data";
+import { routine, routineAskedKey, routineCompletedKey, routineDateKey } from "@/app/routine-data";
 
 const meals = [
   { name: "Breakfast", time: "7:30 AM", meal: "Oats, banana & nuts", calories: "450 kcal", image: "/dashboard/breakfast-oats.jpg" },
@@ -22,6 +22,7 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
   const [todayLabel, setTodayLabel] = useState("");
   const [completedRoutine, setCompletedRoutine] = useState<boolean[]>(() => routine.map(() => false));
   const [waterCount, setWaterCount] = useState(0);
+  const [pendingTaskIndex, setPendingTaskIndex] = useState<number | null>(null);
   const { stepCount, stepProgress, isTracking, toggleTracking } = useStepCounter(selectedDateKey || undefined);
 
   useEffect(() => {
@@ -60,6 +61,19 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
     }).catch(() => undefined);
   }, [selectedDateKey]);
 
+  useEffect(() => {
+    if (!selectedDateKey || selectedDateKey !== todayKey) return;
+    const checkDueTask = () => {
+      const now = new Date();
+      const asked = JSON.parse(localStorage.getItem(routineAskedKey) ?? "[]") as number[];
+      const nextIndex = routine.findIndex((item, index) => !completedRoutine[index] && !asked.includes(index) && now >= getRoutineTime(item.endTime));
+      if (nextIndex !== -1) setPendingTaskIndex((current) => current ?? nextIndex);
+    };
+    checkDueTask();
+    const timer = window.setInterval(checkDueTask, 30_000);
+    return () => window.clearInterval(timer);
+  }, [completedRoutine, selectedDateKey, todayKey]);
+
   function saveProgress(next: { routineCompleted?: boolean[]; water?: number }) {
     if (!selectedDateKey) return;
     void fetch("/api/wellness", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date: selectedDateKey, ...next }) }).catch(() => undefined);
@@ -85,6 +99,24 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
     const nextWater = Math.min(8, waterCount + 1);
     setWaterCount(nextWater);
     saveProgress({ water: nextWater });
+  }
+
+  function answerRoutineReminder(didComplete: boolean) {
+    if (pendingTaskIndex === null) return;
+    const index = pendingTaskIndex;
+    setPendingTaskIndex(null);
+    const asked = JSON.parse(localStorage.getItem(routineAskedKey) ?? "[]") as number[];
+    localStorage.setItem(routineAskedKey, JSON.stringify([...new Set([...asked, index])]));
+    if (completedRoutine[index] === didComplete) return;
+    const next = [...completedRoutine];
+    next[index] = didComplete;
+    setCompletedRoutine(next);
+    const key = selectedDateKey === todayKey ? routineCompletedKey : routineCompletedKey + "-" + selectedDateKey;
+    localStorage.setItem(key, JSON.stringify(next));
+    if (selectedDateKey === todayKey) localStorage.setItem(routineDateKey, todayKey);
+    const isWater = routine[index].title.toLowerCase().includes("water");
+    if (isWater) { const nextWater = didComplete ? Math.max(1, waterCount) : 0; setWaterCount(nextWater); saveProgress({ routineCompleted: next, water: nextWater }); }
+    else saveProgress({ routineCompleted: next });
   }
 
   const done = completedRoutine.filter(Boolean).length;
@@ -155,5 +187,17 @@ export default function DashboardClient({ user }: { user: ProfileUser }) {
       </div>
       <p className="flex items-center justify-center gap-2 pb-2 text-[10px] text-[#a6ad9c]"><Leaf size={12} /> Progress is a practice, not a finish line.</p>
     </div>
+    {pendingTaskIndex !== null && <div role="alert" className="fixed inset-x-4 bottom-24 z-50 ml-auto max-w-sm rounded-2xl border border-[#dce5d0] bg-white p-5 shadow-[0_12px_48px_#153b2e25] lg:bottom-6 lg:right-6"><p className="eyebrow flex items-center gap-2 text-[#769347]"><Sunrise size={13} /> Gentle check-in</p><p className="mt-2 text-sm font-semibold">Did you finish {routine[pendingTaskIndex].title.toLowerCase()}?</p><p className="mt-1 text-xs text-[#8b9389]">Your answer keeps today&apos;s progress accurate.</p><div className="mt-4 flex gap-2"><button type="button" onClick={() => answerRoutineReminder(true)} className="action-primary flex-1">Yes, done<Check size={15} /></button><button type="button" onClick={() => answerRoutineReminder(false)} className="action-secondary flex-1">Not yet</button></div></div>}
   </main>;
+}
+
+function getRoutineTime(time: string) {
+  const [clock, period] = time.split(" ");
+  const [hours, minutes] = clock.split(":").map(Number);
+  let hour = hours;
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+  const taskTime = new Date();
+  taskTime.setHours(hour, minutes, 0, 0);
+  return taskTime;
 }
