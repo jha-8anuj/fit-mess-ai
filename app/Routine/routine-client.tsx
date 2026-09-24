@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Apple, ArrowUpRight, Bed, BookOpen, Check, CheckCheck, Clock, Droplets, Dumbbell, Footprints, Leaf, Moon, Pause, Play, Sparkles } from "lucide-react";
+import { Apple, ArrowUpRight, Bed, BookOpen, Check, CheckCheck, Clock, Droplets, Dumbbell, Flame, Footprints, Leaf, Moon, Pause, Play, Sparkles } from "lucide-react";
 import { useStepCounter } from "@/components/use-step-counter";
 import { PageHeader, ProgressRing, SectionHeading, StatCard, type ProfileUser } from "@/components/ui/fitness";
 import { routine, routineAskedKey, routineCompletedKey, routineDateKey } from "@/app/routine-data";
@@ -130,6 +130,7 @@ export default function RoutineClient({ user }: { user: ProfileUser }) {
   const progress = Math.round(
     (completedTasks / routine.length) * 100
   );
+  const calories = completedTasks * 60 + Math.round(stepCount * 0.04);
 
   function toggleTask(index: number) {
     const next = [...completed];
@@ -157,10 +158,11 @@ export default function RoutineClient({ user }: { user: ProfileUser }) {
         <div className="max-w-lg"><p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-[#d0f268]"><Sparkles size={14} /> SHOW UP FOR YOURSELF</p><h2 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">{progress === 100 ? "Look at you. All done." : "Consistency starts with today."}</h2><p className="mt-3 text-sm leading-6 text-[#b0c4b5]">{completedTasks} of {routine.length} habits complete. Every check is a little promise kept.</p><span className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] text-[#d0f268]"><CheckCheck size={13} /> Your pace. Your progress.</span></div>
         <div className="mx-auto sm:mx-0"><ProgressRing value={progress} label="Completed" dark /></div>
       </section>
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 xl:grid-cols-5">
         <StatCard label="Habits completed" value={completedTasks + " / " + routine.length} detail="One step at a time" icon={CheckCheck} progress={progress} />
         <StatCard label="Steps today" value={stepCount.toLocaleString()} detail="Your goal · 10,000 steps" icon={Footprints} tone="orange" progress={stepProgress} />
         <StatCard label="Water goal" value={<>{waterCount}<span className="ml-1 text-sm font-normal text-[#8b9389]">/ 8 glasses</span></>} detail={waterCount ? "Keep the rhythm going" : "Keep your bottle close"} icon={Droplets} tone="blue" progress={waterCount / 8 * 100}><button type="button" onClick={logWater} className="mt-3 text-[11px] font-semibold text-[#4d8fb6] hover:underline">+ Log one glass</button></StatCard>
+        <StatCard label="Energy used" value={<>{calories}<span className="ml-1 text-sm font-normal text-[#8b9389]">kcal</span></>} detail="Estimated from today's movement" icon={Flame} tone="orange" progress={Math.min(100, Math.round(calories / 2000 * 100))} />
         <StatCard label="Rest goal" value="7–8 hours" detail="Recovery is part of the plan" icon={Moon} tone="purple" />
       </div>
       <div className="grid items-start gap-5 xl:grid-cols-[1.8fr_1fr]">
